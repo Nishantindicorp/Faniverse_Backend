@@ -32,14 +32,14 @@ exports.login = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   const { username, password } = req.body;
-  const userId = req.params.id;
-
+  // console.log("Updating user with ID:", userId);
+  const userId = req.params?.id;
   try {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     if (username) user.username = username;
-
+    // const userId = req.user.id;
     if (password) user.password = password;
 
     await user.save();
@@ -61,4 +61,25 @@ exports.updateUser = async (req, res) => {
 
 exports.verifyToken = (req, res) => {
   res.json({ user: req.user });
+};
+
+exports.getUserById = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      user: {
+        id: user._id,
+        username: user.username,
+        postgresId: user.postgresId,
+      },
+    });
+  } catch (err) {
+    console.error("Get user error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 };
